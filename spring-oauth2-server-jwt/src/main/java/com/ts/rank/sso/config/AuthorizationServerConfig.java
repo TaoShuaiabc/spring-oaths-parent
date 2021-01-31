@@ -2,6 +2,7 @@ package com.ts.rank.sso.config;
 
 import com.ts.rank.sso.servoce.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,6 +11,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 
 import javax.annotation.Resource;
 
@@ -34,6 +36,11 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Resource
     private UserService userService;
 
+    @Resource
+    @Qualifier("redisTokenStore")
+    private TokenStore tokenStore;
+
+
     public AuthorizationServerConfig() {
         super();
     }
@@ -42,7 +49,8 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.authenticationManager(authenticationManager)
-                .userDetailsService(userService);
+                .userDetailsService(userService)
+                .tokenStore(tokenStore); //配置令牌存储策略
     }
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {

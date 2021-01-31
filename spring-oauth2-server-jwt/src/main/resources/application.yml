@@ -3,3 +3,6 @@ server:
 spring:
   application:
     name: oaths2-server-jwt
+  redis:
+    host: 10.10.12.219
+
