@@ -1,5 +1,6 @@
 package com.ts.rank.sso.config;
 
+import com.ts.rank.sso.enhancer.JwtTokenEnhancer;
 import com.ts.rank.sso.servoce.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,9 +12,14 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.TokenEnhancer;
+import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @ClassName AuthorizationServerConfig
@@ -36,22 +42,54 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Resource
     private UserService userService;
 
-    @Resource
+   /* @Resource
     @Qualifier("redisTokenStore")
+    private TokenStore tokenStore;*/
+
+
+
+    @Resource
+    @Qualifier("jwtTokenStore")
     private TokenStore tokenStore;
+    @Resource
+    private JwtAccessTokenConverter jwtAccessTokenConverter;
+    @Resource
+    private JwtTokenEnhancer jwtTokenEnhancer;
 
-
-    public AuthorizationServerConfig() {
-        super();
+    /**
+     * 使用密码模式需要配置
+     */
+    /*jwt有内容增强时使用*/
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
+        TokenEnhancerChain enhancerChain = new TokenEnhancerChain();
+        List<TokenEnhancer> delegates = new ArrayList<>();
+        delegates.add(jwtTokenEnhancer); //配置JWT的内容增强器
+        delegates.add(jwtAccessTokenConverter);
+        enhancerChain.setTokenEnhancers(delegates);
+        endpoints.authenticationManager(authenticationManager)
+                .userDetailsService(userService)
+                .tokenStore(tokenStore) //配置令牌存储策略
+                .accessTokenConverter(jwtAccessTokenConverter)
+                .tokenEnhancer(enhancerChain);
     }
 
+   /*jwt无内容增强时使用*/
+  /*  @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
+        endpoints.authenticationManager(authenticationManager)
+                .userDetailsService(userService)
+                .tokenStore(tokenStore) //配置令牌存储策略
+                .accessTokenConverter(jwtAccessTokenConverter);
+    }*/
 
-    @Override
+    /*redis存储令牌时使用*/
+   /* @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.authenticationManager(authenticationManager)
                 .userDetailsService(userService)
-                .tokenStore(tokenStore); //配置令牌存储策略
-    }
+                    .tokenStore(tokenStore); //配置令牌存储策略
+    }*/
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.inMemory()
@@ -60,8 +98,9 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .accessTokenValiditySeconds(3600)//配置访问token的有效期
                 .refreshTokenValiditySeconds(864000)//配置刷新token的有效期
                 .redirectUris("http://www.baidu.com")//配置redirect_uri，用于授权成功后跳转
+                .autoApprove(true) //自动授权配置
                 .scopes("all")//配置申请的权限范围
-                .authorizedGrantTypes("authorization_code","password");//配置grant_type，表示授权类型
+                .authorizedGrantTypes("authorization_code","password","refresh_token");//配置grant_type，表示授权类型
     }
 
 }

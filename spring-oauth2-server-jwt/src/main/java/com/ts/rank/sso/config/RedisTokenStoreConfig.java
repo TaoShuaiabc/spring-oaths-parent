@@ -10,12 +10,12 @@ import javax.annotation.Resource;
 
 /**
  * @ClassName RedisTokenStoreConfig
- * @Description TODO
+ * @Description TODO redis存储令牌配置
  * @Author TS
  * @Date 2021/1/29 16:43
  * @Version 1.0
  */
-@Configuration
+//@Configuration
 public class RedisTokenStoreConfig {
 
     @Resource
