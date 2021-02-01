@@ -1,0 +1,32 @@
+package com.ts.rank.sso.controller;
+
+/**
+ * @ClassName UserController
+ * @Description TODO
+ * @Author TS
+ * @Date 2021/1/31 15:50
+ * @Version 1.0
+ */
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+
+@RestController
+@RequestMapping("/user")
+public class UserController {
+
+    @GetMapping("/getCurrentUser")
+    public Object getCurrentUser(Authentication authentication) {
+        return authentication;
+    }
+
+    @PreAuthorize("hasAuthority('admin')")
+    @GetMapping("/test")
+    public String test() {
+        return "client1-hello";
+    }
+}
